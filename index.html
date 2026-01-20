@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trò Chơi Câu Cá - Hình Học Toàn Màn Hình</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --font-head: 'Fredoka One', cursive;
+            --font-body: 'Nunito', sans-serif;
+        }
+
+        body {
+            margin: 0; padding: 0; overflow: hidden; font-family: var(--font-body);
+            background-color: #222; display: flex; justify-content: center; align-items: center;
+            height: 100vh; width: 100vw; user-select: none; -webkit-user-select: none; touch-action: manipulation;
+        }
+
+        #game-stage {
+            position: relative; 
+            width: 100%; 
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* --- 1. HÌNH NỀN & ÁNH NẮNG --- */
+        #bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        #bg-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .sun-rays {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 60%);
+            z-index: 2; pointer-events: none;
+        }
+        .sun-rays::after {
+            content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255,255,224,0.08) 15deg 30deg);
+            animation: raysRotate 80s linear infinite;
+        }
+        @keyframes raysRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* --- 2. MẶT NƯỚC & CÁ --- */
+        #water-container {
+            position: absolute; bottom: 0; width: 100%; height: 35%; z-index: 5;
+            background: linear-gradient(to bottom, rgba(41, 182, 246, 0.5) 0%, rgba(2, 136, 209, 0.9) 100%); 
+        }
+        .wave { position: absolute; bottom: 100%; width: 200%; height: 40px; background-repeat: repeat-x; background-size: 50% 100%; }
+        .wave1 { bottom: 95%; left: 0; opacity: 0.6; z-index: 1; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,50 Q250,0 500,50 T1000,50 L1000,100 L0,100 Z" fill="%234fc3f7"/></svg>'); animation: waveMove 15s linear infinite; }
+        .wave2 { bottom: 90%; left: -50px; opacity: 0.8; z-index: 2; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,50 Q250,80 500,50 T1000,50 L1000,100 L0,100 Z" fill="%2329b6f6"/></svg>'); animation: waveMove 10s linear infinite reverse; }
+        .wave3 { bottom: 0; top: -15px; width: 200%; height: 40px; z-index: 15; background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1000 100" xmlns="http://www.w3.org/2000/svg"><path d="M0,30 Q250,0 500,30 T1000,30 L1000,100 L0,100 Z" fill="%230288d1"/></svg>'); opacity: 0.4; animation: waveMove 8s linear infinite; }
+        @keyframes waveMove { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .fish-shadow { position: absolute; font-size: 28px; opacity: 0.4; z-index: 6; pointer-events: none; }
+
+        /* --- 3. THUYỀN & NHÂN VẬT --- */
+        #boat-group {
+            position: absolute; bottom: 25%; left: 50%; width: 400px; height: 300px; 
+            z-index: 10; transform: translateX(-50%); pointer-events: none;
+        }
+        .floating { animation: floatBoat 3s ease-in-out infinite; }
+        @keyframes floatBoat { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 50% { transform: translateX(-50%) translateY(5px) rotate(1deg); } }
+
+        .vibrating { animation: vibrate 0.3s linear; }
+        @keyframes vibrate {
+            0% { transform: translateX(-50.5%) translateY(2px); }
+            20% { transform: translateX(-49.5%) translateY(-2px); }
+            40% { transform: translateX(-50.5%) translateY(2px); }
+            60% { transform: translateX(-49.5%) translateY(-2px); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+
+        #boat-svg { position: absolute; bottom: 0; left: 0; width: 100%; height: auto; z-index: 1; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
+        #char-img-el { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 240px; height: auto; z-index: 2; }
+
+        /* --- 4. GIAO DIỆN CÂU HỎI --- */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+        }
+        .screen.active { display: flex; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .quiz-modal { 
+            background: #fff; padding: 25px; border-radius: 30px; 
+            width: 95%; height: 90vh; 
+            display: flex; gap: 20px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 8px solid #e1f5fe;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .quiz-left { 
+            flex: 1; text-align: left; display: flex; flex-direction: column; 
+            justify-content: center; padding: 20px;
+        }
+        
+        .no-image .quiz-modal { width: 700px; height: auto; flex-direction: column; align-items: center; }
+        .no-image .quiz-left { text-align: center; width: 100%; }
+        .no-image #q-content { text-align: center; border-left: none; padding-left: 0; font-size: 1.8rem; }
+        .no-image .grid-opts { width: 100%; }
+
+        .has-image .quiz-modal { flex-direction: row; }
+        .has-image .quiz-right { 
+            flex: 1; display: flex; align-items: center; justify-content: center; 
+            background: #f1f8e9; border-radius: 20px; border: 3px solid #eee; overflow: hidden;
+        }
+        .has-image .quiz-right img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .quiz-title-box { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+        .quiz-title { color: #f57c00; font-family: var(--font-head); font-size: 2.2rem; margin: 0; }
+        
+        .timer-container { position: relative; width: 70px; height: 70px; }
+        .timer-svg { transform: rotate(-90deg); width: 70px; height: 70px; }
+        .timer-bg { fill: none; stroke: #eee; stroke-width: 6; }
+        .timer-progress { fill: none; stroke: #f57c00; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-head); font-size: 1.4rem; color: #f57c00; }
+
+        #q-content { font-size: 1.6rem; font-weight: bold; color: #333; margin-bottom: 20px; line-height: 1.4; border-left: 8px solid #4facfe; padding-left: 20px; }
+
+        .grid-opts { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+        .btn-opt { background: #fff; border: 2px solid #cfd8dc; padding: 18px 25px; border-radius: 20px; font-size: 1.3rem; cursor: pointer; font-weight: bold; color: #455a64; text-align: left; transition: 0.2s; box-shadow: 0 4px 0 #eceff1; }
+        .btn-opt:hover { background: #e0f7fa; border-color: #0288d1; color: #01579b; transform: translateY(-2px); }
+
+        /* --- REEL SCREEN --- */
+        #screen-reel { cursor: pointer; }
+        .reel-modal { background: rgba(255,255,255,0.98); padding: 30px; border-radius: 40px; text-align: center; width: 450px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); pointer-events: none; }
+        .energy-circle-container { position: relative; width: 220px; height: 220px; margin: 20px auto; }
+        .energy-svg { transform: rotate(-90deg); width: 220px; height: 220px; }
+        .energy-bg { fill: none; stroke: #eee; stroke-width: 15; }
+        .energy-progress { fill: none; stroke: #4caf50; stroke-width: 15; stroke-linecap: round; transition: stroke-dashoffset 0.1s; }
+        .energy-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: var(--font-head); font-size: 2.8rem; color: #2e7d32; }
+
+        /* TIÊU ĐỀ 3D */
+        .game-title-3d {
+            font-family: var(--font-head); font-size: clamp(3rem, 10vw, 6rem); color: #fff;
+            text-align: center; margin-bottom: 20px;
+            text-shadow: 5px 5px 0px #01579b, 10px 10px 20px rgba(0,0,0,0.4);
+            animation: titleBounce 2s infinite;
+        }
+        @keyframes titleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+
+        /* HUD */
+        #hud-money, #hud-count { position: absolute; top: 20px; background: white; padding: 10px 20px; border-radius: 40px; font-family: var(--font-head); font-size: 1.2rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); z-index: 50; }
+        #hud-money { left: 20px; color: #f57c00; }
+        #hud-count { right: 20px; color: #0277bd; }
+
+        /* FISH CARD */
+        .fish-card {
+            background: radial-gradient(circle at center, #ffffff 0%, #e3f2fd 100%);
+            padding: 0; border-radius: 40px; 
+            width: 500px; max-width: 90%; text-align: center;
+            border: 6px solid #ffd700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.4), 0 20px 60px rgba(0,0,0,0.6);
+            overflow: hidden; animation: popUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .fish-card-header { background: linear-gradient(90deg, #ff6f00 0%, #ff8f00 100%); padding: 18px; color: white; font-family: var(--font-head); font-size: 2.2rem; text-transform: uppercase; letter-spacing: 1px; }
+        .fish-avatar { font-size: 110px; margin: 10px 0; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2)); animation: floatFish 3s infinite; }
+        @keyframes floatFish { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .fish-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: rgba(255,255,255,0.7); padding: 15px; border-radius: 25px; margin: 10px 25px; border: 2px solid #b3e5fc; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-size: 1rem; color: #546e7a; font-weight: bold; text-transform: uppercase; }
+        .stat-value { font-size: 1.8rem; font-weight: bold; color: #01579b; font-family: var(--font-head); }
+
+        .btn-game { font-family: var(--font-head); padding: 15px 50px; font-size: 1.8rem; background: linear-gradient(to bottom, #ff9800, #f57c00); color: white; border: 5px solid #fff; border-radius: 70px; cursor: pointer; box-shadow: 0 8px 0 #e65100; margin-top: 15px; transition: 0.1s; }
+        .btn-game:active { transform: translateY(6px); box-shadow: 0 2px #e65100; }
+        
+        #interaction-layer { position: absolute; width: 100%; height: 100%; z-index: 20; cursor: pointer; display: none; }
+        
+        /* BẢNG CHÚC MỪNG CUỐI */
+        .summary-val { font-size: 3.5rem; color: #f57c00; font-family: var(--font-head); margin: 10px 0; text-shadow: 2px 2px 0 rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body onmousedown="Game.handleGlobalClick(event)">
+
+<div id="game-stage">
+    
+    <div id="bg-container">
+        <img id="bg-img" src="./images/nen_bien.jpg" onerror="this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop'" alt="Background">
+        <div class="sun-rays"></div>
+    </div>
+
+    <div id="water-container">
+        <div id="fish-layer" style="position: absolute; width: 100%; height: 100%; z-index: 5;"></div>
+        <div class="wave wave1"></div>
+        <div class="wave wave2"></div>
+        <div class="wave wave3"></div>
+    </div>
+
+    <div id="boat-group">
+        <svg id="boat-svg" viewBox="0 0 400 200">
+            <path d="M20,80 Q200,160 380,80 L360,50 L40,50 Z" fill="#8D6E63" stroke="#5D4037" stroke-width="4"/>
+            <path d="M40,50 L360,50" stroke="#fff" stroke-width="4" opacity="0.3"/>
+            <rect x="120" y="50" width="160" height="12" fill="#5D4037" rx="3"/>
+            <path d="M60,75 L340,75" stroke="#6D4C41" stroke-width="2" opacity="0.5"/>
+        </svg>
+        <img id="char-img-el" src="./images/nhan_vat_moi.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4860/4860847.png'" alt="Character">
+    </div>
+
+    <div id="hud-money">💰 <span id="money-val">0</span></div>
+    <div id="hud-count">Câu: <span id="q-current">1</span>/6</div>
+    <div id="interaction-layer" onclick="Game.castLine()"></div>
+
+    <!-- SCREENS -->
+    <div id="screen-start" class="screen active" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+        <h1 class="game-title-3d">CÂU CÁ<br>TRÍ TUỆ</h1>
+        <button class="btn-game" onclick="Game.start()">BẮT ĐẦU</button>
+    </div>
+
+    <div id="screen-quiz" class="screen">
+        <div class="quiz-modal" id="quiz-modal">
+            <div class="quiz-left">
+                <div class="quiz-title-box">
+                    <h2 class="quiz-title">⚠️ CÁ CẮN CÂU!</h2>
+                    <div class="timer-container">
+                        <svg class="timer-svg">
+                            <circle class="timer-bg" cx="35" cy="35" r="30"></circle>
+                            <circle id="timer-progress" class="timer-progress" cx="35" cy="35" r="30" stroke-dasharray="188.5" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <div id="timer-text" class="timer-text">10</div>
+                    </div>
+                </div>
+                <div id="q-content">...</div>
+                <div id="q-options" class="grid-opts"></div>
+            </div>
+            <!-- Cột bên phải chỉ hiện khi có ảnh -->
+            <div class="quiz-right" id="quiz-right">
+                <img id="q-img" src="" alt="Minh họa">
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-reel" class="screen">
+        <div class="reel-modal">
+            <h2 style="color:#d32f2f; font-size:2.2rem; font-family:var(--font-head); margin-bottom: 5px;">🔥 KÉO NGAY! 🔥</h2>
+            <p style="color:#666; font-weight: bold; margin: 0;">Bấm liên tục vào màn hình!</p>
+            <div class="energy-circle-container">
+                <svg class="energy-svg">
+                    <circle class="energy-bg" cx="110" cy="110" r="95"></circle>
+                    <circle id="energy-progress" class="energy-progress" cx="110" cy="110" r="95" stroke-dasharray="597" stroke-dashoffset="298"></circle>
+                </svg>
+                <div id="energy-text" class="energy-text">50%</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-result" class="screen">
+        <div class="fish-card">
+            <div class="fish-card-header">🎉 CHIẾN LỢI PHẨM!</div>
+            <div class="fish-card-body">
+                <div id="res-img" class="fish-avatar">🐟</div>
+                <h3 id="res-name" style="font-family:var(--font-head); font-size:2rem; color:#0277bd; margin:5px 0;">...</h3>
+                <div class="fish-stats">
+                    <div class="stat-item"><span class="stat-label">Khối lượng</span><span class="stat-value"><span id="res-weight">0</span> kg</span></div>
+                    <div class="stat-item"><span class="stat-label">Giá trị</span><span class="stat-value" style="color:#e65100;">+<span id="res-price">0</span> $</span></div>
+                </div>
+                <div style="background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:50px; margin:20px 30px; font-weight:bold; font-size:1.4rem; border: 2px solid #a5d6a7;">
+                    ⭐ Điểm: +<span id="res-score">0</span>
+                </div>
+                <button class="btn-game" style="font-size:1.5rem; padding:12px 60px;" onclick="Game.resetToLake()">TIẾP TỤC</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-fail" class="screen">
+        <div class="fish-card" style="border-color:#b0bec5; width: 450px;">
+            <div class="fish-card-header" style="background: #78909c;">💦 CÁ CHẠY MẤT!</div>
+            <div class="fish-card-body">
+                <p id="fail-msg" style="font-size: 1.8rem; font-weight: bold; color: #546e7a; margin: 40px 0;">...</p>
+                <button class="btn-game" style="background: #b0bec5; border-color: #eee; box-shadow: 0 8px 0 #78909c;" onclick="Game.resetToLake()">TIẾP TỤC</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="screen-end" class="screen">
+        <div class="fish-card" style="width: 550px; border-color: #4caf50;">
+            <div class="fish-card-header" style="background: linear-gradient(90deg, #4caf50 0%, #81c784 100%);">🏆 CHÚC MỪNG! 🏆</div>
+            <div class="fish-card-body">
+                <div style="font-size: 100px; margin-bottom: 5px;">🎊</div>
+                <h2 style="font-family:var(--font-head); color:#0277bd; margin: 0;">BẠN ĐÃ HOÀN THÀNH!</h2>
+                <p style="font-weight: bold; color: #555; font-size: 1.4rem; margin-top: 15px;">Tổng thu nhập của bạn:</p>
+                <div class="summary-val"><span id="final-money">0</span> $</div>
+                <button class="btn-game" style="font-size: 1.8rem; padding: 15px 50px; margin-top: 15px;" onclick="location.reload()">CHƠI LẠI</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* --- HỆ THỐNG ÂM THANH --- */
+    const AudioSys = {
+        ctx: null,
+        init() { try { const AC = window.AudioContext || window.webkitAudioContext; if(AC) this.ctx = new AC(); } catch(e){} },
+        playTone(freq, type, duration, vol=0.1) {
+            if(!this.ctx) this.init(); if(!this.ctx) return;
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+            osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+            gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+            osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
+        },
+        sfxBite() { this.playTone(800, 'square', 0.1, 0.1); },
+        sfxWin() { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.playTone(f, 'triangle', 0.3, 0.2), i*150)); },
+        sfxFail() { [400, 300, 200].forEach((f, i) => setTimeout(() => this.playTone(f, 'sawtooth', 0.4, 0.1), i*200)); },
+        sfxPull() { this.playTone(450 + Math.random()*100, 'sine', 0.05, 0.05); }
+    };
+
+    /* --- DATA CÂU HỎI --- */
+    const DB_QUESTIONS = [
+        { id: 1, q: "Điền vào chỗ trống để hoàn thành Định lí Thales: \"Nếu một đường thẳng song song với một cạnh của tam giác và cắt hai cạnh còn lại thì nó định ra trên hai cạnh đó những đoạn thẳng _______.\"", a: ["A. bằng nhau", "B. song song", "C. tương ứng tỉ lệ", "D. vuông góc"], c: 2, img: "" },
+        { id: 2, q: "Dựa vào hình vẽ bên, hãy tính độ dài cạnh NL.", a: ["A. NL = 1.8", "B. NL = 2.4", "C. NL = 2.8", "D. NL = 3.2"], c: 2, img: "./images/q2.png" },
+        { id: 3, q: "Điền vào chỗ trống để hoàn thành Định lí Thales đảo: \"Nếu một đường thẳng cắt hai cạnh của một tam giác và định ra trên hai cạnh này những đoạn thẳng tương ứng tỉ lệ thì đường thẳng đó _______ với cạnh còn lại của tam giác.\"", a: ["A. trùng", "B. cắt", "C. vuông góc", "D. song song"], c: 3, img: "" },
+        { id: 4, q: "Tìm x và y trong hình vẽ bên.", a: ["A. x=5, y=25", "B. x=6, y=30", "C. x=7, y=35", "D. x=4, y=20"], c: 1, img: "./images/q4.png" },
+        { id: 5, q: "Điền vào chỗ trống để hoàn thành Hệ quả định lí Thales: \"Nếu một đường thẳng cắt hai cạnh của một tam giác và song song với cạnh còn lại thì nó tạo thành một tam giác mới có ba cạnh _______ với ba cạnh của tam giác đã cho.\"", a: ["A. bằng nhau", "B. song song", "C. tương ứng tỉ lệ", "D. đối xứng"], c: 2, img: "" },
+        { id: 6, q: "Dựa vào hình vẽ bên, giá trị độ dài cạnh x là bao nhiêu?", a: ["A. x = 6.8", "B. x = 7.4", "C. x = 8.4", "D. x = 9.2"], c: 2, img: "./images/q6.png" }
+    ];
+
+    /* --- DATA LOÀI CÁ (ĐƯỢC SHUFFLE) --- */
+    const FISH_SPECIES = [
+        { name: "Cá Chép Thần Kỳ", img: "🐟", minKg: 450, maxKg: 1000, min$: 500, max$: 2000, decay: 0.4 },
+        { name: "Cá Rồng Bạch Kim", img: "🐉", minKg: 500, maxKg: 1000, min$: 500, max$: 2000, decay: 0.5 },
+        { name: "Cá Ngừ Khổng Lồ", img: "🐡", minKg: 750, maxKg: 1500, min$: 1500, max$: 3000, decay: 0.6 },
+        { name: "Cá Kiếm Đại Dương", img: "🦈", minKg: 500, maxKg: 1000, min$: 1500, max$: 2000, decay: 0.7 },
+        { name: "Cá Mập Megalodon", img: "🦕", minKg: 1000, maxKg: 2000, min$: 3000, max$: 5000, decay: 0.8 },
+        { name: "Thủy Quái Kraken", img: "🐙", minKg: 1000, maxKg: 2000, min$: 3000, max$: 5000, decay: 1.0 }
+    ];
+
+    const Game = {
+        state: 'START', currentStep: 0, money: 0, currentQ: null, currentFish: null,
+        energy: 50, reelInterval: null, timeLeft: 10, timerInterval: null,
+        timerCircleRadius: 35, energyCircleRadius: 100,
+        fishPool: [], // Hồ cá được shuffle
+
+        init() {
+            this.currentStep = 0; this.money = 0;
+            this.updateCountUI(); this.spawnDecorFish(); AudioSys.init();
+            
+            // SHUFFLE CÁ (ĐẢM BẢO MỖI LẦN CHƠI THỨ TỰ CÁ LÀ KHÁC NHAU)
+            this.fishPool = [...FISH_SPECIES].sort(() => Math.random() - 0.5);
+            
+            document.getElementById('bg-img').src = "./images/nen_bien.jpg";
+        },
+
+        handleGlobalClick(e) { if(this.state === 'REELING') this.reelPull(e); },
+
+        start() { this.init(); document.getElementById('screen-start').classList.remove('active'); document.getElementById('boat-group').classList.add('floating'); document.getElementById('interaction-layer').style.display = 'block'; this.state = 'IDLE'; },
+
+        spawnDecorFish() {
+            const container = document.getElementById('fish-layer'); container.innerHTML = '';
+            for(let i=0; i<8; i++){
+                let f = document.createElement('div'); f.className = 'fish-shadow'; f.innerText = '🐟';
+                f.style.top = (30 + Math.random()*60) + '%'; f.style.left = '-10%';
+                f.style.animation = `swimFish ${15 + Math.random()*20}s linear ${Math.random()*10}s infinite`;
+                if(Math.random() > 0.5) f.style.transform = 'scaleX(-1)';
+                container.appendChild(f);
+            }
+            if(!document.getElementById('fish-anim-style')) {
+                const s = document.createElement('style'); s.id = 'fish-anim-style';
+                s.innerHTML = `@keyframes swimFish { 0% { left: -10%; } 100% { left: 110%; } } @keyframes popUp { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1; } }`;
+                document.head.appendChild(s);
+            }
+        },
+
+        castLine() {
+            if (this.state !== 'IDLE' || this.currentStep >= DB_QUESTIONS.length) return;
+            this.state = 'CASTING';
+            const boat = document.getElementById('boat-group'); boat.classList.add('vibrating');
+            setTimeout(() => { boat.classList.remove('vibrating'); this.triggerBite(); }, 300);
+        },
+
+        triggerBite() { AudioSys.sfxBite(); this.currentQ = DB_QUESTIONS[this.currentStep]; this.calcFishData(); this.state = 'QUIZ'; this.renderQuiz(); },
+
+        calcFishData() {
+            // LẤY CÁ TỪ POOL ĐÃ SHUFFLE THEO STEP HIỆN TẠI
+            const cfg = this.fishPool[this.currentStep];
+            const randomScore = Math.floor(Math.random() * 51) + 50;
+            this.currentFish = { ...cfg, w: Math.floor(Math.random()*(cfg.maxKg - cfg.minKg) + cfg.minKg), p: Math.floor(Math.random()*(cfg.max$ - cfg.min$) + cfg.min$), score: randomScore };
+        },
+
+        renderQuiz() {
+            const screenQuiz = document.getElementById('screen-quiz');
+            document.getElementById('screen-quiz').classList.add('active');
+            document.getElementById('q-content').innerText = this.currentQ.q;
+            
+            const qModal = document.getElementById('quiz-modal');
+            const qRight = document.getElementById('quiz-right');
+            const qImg = document.getElementById('q-img');
+
+            if(this.currentQ.img && this.currentQ.img !== "") {
+                screenQuiz.classList.add('has-image');
+                screenQuiz.classList.remove('no-image');
+                qRight.style.display = 'flex';
+                qImg.src = this.currentQ.img;
+            } else {
+                screenQuiz.classList.add('no-image');
+                screenQuiz.classList.remove('has-image');
+                qRight.style.display = 'none';
+            }
+
+            const div = document.getElementById('q-options'); div.innerHTML = '';
+            this.currentQ.a.forEach((opt, i) => {
+                let btn = document.createElement('button'); btn.className = 'btn-opt';
+                btn.innerText = opt; btn.onclick = (e) => { e.stopPropagation(); this.answer(i); }; div.appendChild(btn);
+            });
+            this.startTimer();
+        },
+
+        startTimer() {
+            this.timeLeft = 15; this.updateTimerUI();
+            if (this.timerInterval) clearInterval(this.timerInterval);
+            this.timerInterval = setInterval(() => {
+                this.timeLeft--; this.updateTimerUI();
+                if (this.timeLeft <= 0) { clearInterval(this.timerInterval); this.failByTimeout(); }
+            }, 1000);
+        },
+
+        updateTimerUI() {
+            const circle = document.getElementById('timer-progress'); const text = document.getElementById('timer-text');
+            const circumference = 2 * Math.PI * this.timerCircleRadius;
+            const offset = circumference - (this.timeLeft / 10) * circumference;
+            circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
+            text.innerText = this.timeLeft;
+        },
+
+        failByTimeout() { AudioSys.sfxFail(); document.getElementById('screen-quiz').classList.remove('active'); this.showFail("Đã hết thời gian!"); },
+
+        answer(idx) {
+            clearInterval(this.timerInterval); document.getElementById('screen-quiz').classList.remove('active');
+            if(idx === this.currentQ.c) this.startReeling(); else { AudioSys.sfxFail(); this.showFail("Câu trả lời chưa đúng!"); }
+        },
+
+        startReeling() {
+            this.state = 'REELING'; document.getElementById('screen-reel').classList.add('active');
+            this.energy = 50; this.updateReelUI();
+            if (this.reelInterval) clearInterval(this.reelInterval);
+            this.reelInterval = setInterval(() => {
+                this.energy -= this.currentFish.decay; if (this.energy <= 0) this.endReeling(false);
+                this.updateReelUI();
+            }, 50);
+        },
+
+        reelPull(e) {
+            if(this.state !== 'REELING') return; 
+            if(e) e.preventDefault();
+            this.energy += 12; AudioSys.sfxPull();
+            if (this.energy >= 100) { this.energy = 100; this.updateReelUI(); this.endReeling(true); }
+        },
+
+        updateReelUI() {
+            const circle = document.getElementById('energy-progress'); const text = document.getElementById('energy-text');
+            const circumference = 2 * Math.PI * this.energyCircleRadius;
+            const displayEnergy = Math.max(0, Math.min(100, this.energy));
+            const offset = circumference - (displayEnergy / 100) * circumference;
+            circle.style.strokeDasharray = circumference; circle.style.strokeDashoffset = offset;
+            text.innerText = Math.floor(displayEnergy) + "%";
+        },
+
+        endReeling(win) {
+            clearInterval(this.reelInterval); document.getElementById('screen-reel').classList.remove('active');
+            if (win) { AudioSys.sfxWin(); this.showSuccess(); } else { AudioSys.sfxFail(); this.showFail("Cá khỏe quá!"); }
+        },
+
+        showSuccess() {
+            this.state = 'SUCCESS'; this.money += this.currentFish.p;
+            document.getElementById('money-val').innerText = this.money;
+            const modal = document.getElementById('screen-result'); modal.classList.add('active');
+            document.getElementById('res-img').innerText = this.currentFish.img;
+            document.getElementById('res-name').innerText = this.currentFish.name;
+            document.getElementById('res-weight').innerText = this.currentFish.w;
+            document.getElementById('res-price').innerText = this.currentFish.p;
+            document.getElementById('res-score').innerText = this.currentFish.score;
+        },
+
+        showFail(msg) { this.state = 'FAIL'; document.getElementById('screen-fail').classList.add('active'); document.getElementById('fail-msg').innerText = msg; },
+
+        resetToLake() {
+            document.querySelectorAll('.screen').forEach(s => { if(s.id !== 'game-stage') s.classList.remove('active'); });
+            this.currentStep++; this.updateCountUI();
+            if (this.currentStep === 2) { document.getElementById('bg-img').src = "./images/nen_ho.jpg"; }
+            if(this.currentStep >= DB_QUESTIONS.length) {
+                this.state = 'END'; 
+                document.getElementById('screen-end').classList.add('active');
+                document.getElementById('final-money').innerText = this.money;
+            } else { this.state = 'IDLE'; }
+        },
+
+        updateCountUI() { document.getElementById('q-current').innerText = (this.currentStep + 1); }
+    };
+</script>
+</body>
+</html>

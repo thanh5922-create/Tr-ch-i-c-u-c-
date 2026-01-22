@@ -55,25 +55,25 @@
         .fish-shadow { position: absolute; font-size: 28px; opacity: 0.4; z-index: 6; pointer-events: none; }
 
         /* --- 3. THUYỀN (CĂN GIỮA CHUẨN) --- */
-        #boat-group {
-            position: absolute; bottom: 30%; left: 50%; width: 300px; height: 300px; 
+         #boat-group {
+            position: absolute; bottom: 25%; left: 50%; width: 400px; height: 300px; 
             z-index: 10; transform: translateX(-50%); pointer-events: none;
         }
-        .floating { animation: boatFloat 3.5s ease-in-out infinite; }
-        @keyframes boatFloat { 
-            0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 
-            50% { transform: translateX(-50%) translateY(8px) rotate(1deg); } 
-        }
+        .floating { animation: floatBoat 3s ease-in-out infinite; }
+        @keyframes floatBoat { 0%, 100% { transform: translateX(-50%) translateY(0) rotate(-1deg); } 50% { transform: translateX(-50%) translateY(5px) rotate(1deg); } }
 
-        .vibrating { animation: vibrate 0.3s linear; }
         @keyframes vibrate {
-            0% { transform: translateX(-51%) translateY(2px); }
-            20% { transform: translateX(-49%) translateY(-2px); }
+            0% { transform: translateX(-50.5%) translateY(2px); }
+            20% { transform: translateX(-49.5%) translateY(-2px); }
+            40% { transform: translateX(-50.5%) translateY(2px); }
+            60% { transform: translateX(-49.5%) translateY(-2px); }
             100% { transform: translateX(-50%) translateY(0); }
         }
 
         #boat-svg { position: absolute; bottom: 0; left: 0; width: 100%; height: auto; z-index: 1; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3)); }
         #char-img-el { position: absolute; bottom: 65px; left: 50%; transform: translateX(-50%); width: 240px; height: auto; z-index: 2; }
+
+        .vibrating { animation: vibrate 0.3s linear; }
 
         /* --- 4. GIAO DIỆN CÂU HỎI --- */
         .screen {

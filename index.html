@@ -180,16 +180,16 @@ height: 85vh;
         <div class="wave wave2"></div>
         <div class="wave wave3"></div>
 </div>
-
-    <div id="boat-group">
+<div id="boat-group">
         <svg id="boat-svg" viewBox="0 0 400 200">
             <path d="M20,80 Q200,160 380,80 L360,50 L40,50 Z" fill="#8D6E63" stroke="#5D4037" stroke-width="4"/>
             <path d="M40,50 L360,50" stroke="#fff" stroke-width="4" opacity="0.3"/>
             <rect x="120" y="50" width="160" height="12" fill="#5D4037" rx="3"/>
             <path d="M60,75 L340,75" stroke="#6D4C41" stroke-width="2" opacity="0.5"/>
         </svg>
-        <img id="char-img-el" src="./images/nhan_vat_moi.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4860/4860847.png'">
+        <img id="char-img-el" src="./images/nhan_vat_moi.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/4860/4860847.png'" alt="Character">
     </div>
+
 
     <div id="hud-count">Câu: <span id="q-current">1</span>/6</div>
     <div id="interaction-layer" onclick="Game.castLine()"></div>
@@ -463,3 +463,4 @@ document.getElementById('res-img').innerText = this.currentFish.img;
 </body>
 
 </html>
+
